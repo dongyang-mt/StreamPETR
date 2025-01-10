@@ -12,6 +12,7 @@ import mmcv
 import os
 import time
 import torch
+import torch_musa
 import warnings
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist, wrap_fp16_model
@@ -98,7 +99,7 @@ def parse_args():
 
 def main():
     args = parse_args()
-
+    print(args.config)
     cfg = Config.fromfile(args.config)
     if args.cfg_options is not None:
         cfg.merge_from_dict(args.cfg_options)
@@ -162,11 +163,15 @@ def main():
         distributed = False
     else:
         distributed = True
+        print("cfg.dist_params: ", cfg.dist_params)
+        cfg.dist_params = {'backend':'mccl'}
         init_dist(args.launcher, **cfg.dist_params)
         # re-set gpu_ids with distributed training mode
         _, world_size = get_dist_info()
         cfg.gpu_ids = range(world_size)
-
+        print("cfg.gpu_ids:", cfg.gpu_ids)
+        print("world_size:", world_size)
+        
     # create work_dir
     mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
     # dump config
@@ -213,8 +218,10 @@ def main():
         cfg.model,
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
-
+    print(cfg.get('train_cfg'))
+    print(cfg.get('test_cfg'))
     model.init_weights()
+    # print(model.device)
 
     if cfg.get('SyncBN', False):
         import torch.nn as nn

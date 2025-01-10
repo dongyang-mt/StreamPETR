@@ -59,7 +59,7 @@ class FlashAttention(nn.Module):
             key_padding_mask: a bool tensor of shape (B, S)
         """
         assert q.dtype in [torch.float16, torch.bfloat16] and kv.dtype in [torch.float16, torch.bfloat16]
-        assert q.is_cuda and kv.is_cuda
+        assert q.is_musa and kv.is_musa
         assert q.shape[0] == kv.shape[0] and q.shape[-2] == kv.shape[-2] and q.shape[-1] == kv.shape[-1]
 
         batch_size = q.shape[0]

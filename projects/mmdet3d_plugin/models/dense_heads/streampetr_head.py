@@ -319,14 +319,40 @@ class StreamPETRHead(AnchorFreeHead):
     def pre_update_memory(self, data):
         x = data['prev_exists']
         B = x.size(0)
+        # print("==data:", data)
+        print("data.keys():", data.keys())
+        print("data['prev_exists'].shape:", data['prev_exists'].shape)
+        print("data['prev_exists'].device:", data['prev_exists'].device)
+        print("data['prev_exists'].dtype:", data['prev_exists'].dtype)
+        print("data['ego_pose_inv'].shape:", data['ego_pose_inv'].shape)
+        print("data['ego_pose_inv'].device:", data['ego_pose_inv'].device)
+        print("data['ego_pose_inv'].dtype:", data['ego_pose_inv'].dtype)
+        print("data['timestamp'].shape:", data['timestamp'].shape)
+        print("data['timestamp'].device:", data['timestamp'].device)
+        print("data['timestamp'].dtype:", data['timestamp'].dtype)
+        data['timestamp'] = data['timestamp'].to(torch.float32)
+        # print()
         # refresh the memory when the scene changes
         if self.memory_embedding is None:
+            print("self.memory_embedding is None:")
             self.memory_embedding = x.new_zeros(B, self.memory_len, self.embed_dims)
             self.memory_reference_point = x.new_zeros(B, self.memory_len, 3)
             self.memory_timestamp = x.new_zeros(B, self.memory_len, 1)
             self.memory_egopose = x.new_zeros(B, self.memory_len, 4, 4)
             self.memory_velo = x.new_zeros(B, self.memory_len, 2)
+            print("343 self.memory_timestamp.shape:", self.memory_timestamp.shape)
+            print("self.memory_timestamp.device:", self.memory_timestamp.device)
+            print("self.memory_timestamp.dtype:", self.memory_timestamp.dtype)
+
         else:
+            print("348 self.memory_timestamp.shape:", self.memory_timestamp.shape)
+            print("349 self.memory_timestamp.device:", self.memory_timestamp.device)
+            print("350 self.memory_timestamp.dtype:", self.memory_timestamp.dtype)
+            print("data['timestamp'].shape:", data['timestamp'].shape)
+            print("data['timestamp'].device:", data['timestamp'].device)
+            print("data['timestamp'].dtype:", data['timestamp'].dtype)
+            data['timestamp'] = data['timestamp'].to(torch.float32)
+            self.memory_timestamp = self.memory_timestamp.to(torch.float32)
             self.memory_timestamp += data['timestamp'].unsqueeze(-1).unsqueeze(-1)
             self.memory_egopose = data['ego_pose_inv'].unsqueeze(1) @ self.memory_egopose
             self.memory_reference_point = transform_reference_points(self.memory_reference_point, data['ego_pose_inv'], reverse=False)
@@ -370,7 +396,19 @@ class StreamPETRHead(AnchorFreeHead):
         self.memory_reference_point = torch.cat([rec_reference_points, self.memory_reference_point], dim=1)
         self.memory_velo = torch.cat([rec_velo, self.memory_velo], dim=1)
         self.memory_reference_point = transform_reference_points(self.memory_reference_point, data['ego_pose'], reverse=False)
-        self.memory_timestamp -= data['timestamp'].unsqueeze(-1).unsqueeze(-1)
+        print("data['timestamp'].unsqueeze(-1).unsqueeze(-1).shape:", data['timestamp'].unsqueeze(-1).unsqueeze(-1).shape)
+        print("data['timestamp'].unsqueeze(-1).unsqueeze(-1).device:", data['timestamp'].unsqueeze(-1).unsqueeze(-1).device)
+        print("data['timestamp'].unsqueeze(-1).unsqueeze(-1).dtype:", data['timestamp'].unsqueeze(-1).unsqueeze(-1).dtype)
+        print("self.memory_timestamp.shape:", self.memory_timestamp.shape)
+        print("self.memory_timestamp.device:", self.memory_timestamp.device)
+        print("self.memory_timestamp.dtype:", self.memory_timestamp.dtype)
+        # expanded_timestamp = data['timestamp'].expand(-1, self.memory_timestamp.shape[1], -1)
+        expanded_timestamp = data['timestamp'].repeat(1, self.memory_timestamp.shape[1], 1)
+        print("expanded_timestamp.shape:", expanded_timestamp.shape)
+        print("expanded_timestamp.device:", expanded_timestamp.device)
+        print("expanded_timestamp.dtype:", expanded_timestamp.dtype)
+        # self.memory_timestamp = self.memory_timestamp - expanded_timestamp
+        # self.memory_timestamp = self.memory_timestamp - data['timestamp'].unsqueeze(-1).unsqueeze(-1)
         self.memory_egopose = data['ego_pose'].unsqueeze(1) @ self.memory_egopose
 
     def position_embeding(self, data, memory_centers, topk_indexes, img_metas):
@@ -452,7 +490,7 @@ class StreamPETRHead(AnchorFreeHead):
         if self.training and self.with_dn:
             targets = [torch.cat((img_meta['gt_bboxes_3d']._data.gravity_center, img_meta['gt_bboxes_3d']._data.tensor[:, 3:]),dim=1) for img_meta in img_metas ]
             labels = [img_meta['gt_labels_3d']._data for img_meta in img_metas ]
-            known = [(torch.ones_like(t)).cuda() for t in labels]
+            known = [(torch.ones_like(t)).musa() for t in labels]
             know_idx = known
             unmask_bbox = unmask_label = torch.cat(known)
             #gt_num

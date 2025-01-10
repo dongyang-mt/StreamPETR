@@ -279,7 +279,7 @@ class SparseHead(AnchorFreeHead):
         if self.training and self.with_dn:
             targets = [torch.cat((img_meta['gt_bboxes_3d']._data.gravity_center, img_meta['gt_bboxes_3d']._data.tensor[:, 3:]),dim=1) for img_meta in img_metas ]
             labels = [img_meta['gt_labels_3d']._data for img_meta in img_metas ]
-            known = [(torch.ones_like(t)).cuda() for t in labels]
+            known = [(torch.ones_like(t)).musa() for t in labels]
             know_idx = known
             unmask_bbox = unmask_label = torch.cat(known)
             #gt_num

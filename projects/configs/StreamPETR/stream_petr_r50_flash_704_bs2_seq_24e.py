@@ -18,8 +18,8 @@ class_names = [
     'motorcycle', 'bicycle', 'pedestrian', 'traffic_cone'
 ]
 
-num_gpus = 8
-batch_size = 2
+num_gpus = 1
+batch_size = 1
 num_iters_per_epoch = 28130 // (num_gpus * batch_size)
 num_epochs = 24
 
@@ -68,6 +68,7 @@ model = dict(
         loss_iou2d=dict(type='GIoULoss', loss_weight=2.0),
         loss_centers2d=dict(type='L1Loss', loss_weight=10.0),
         train_cfg=dict(
+            device='musa:0',
         assigner2d=dict(
             type='HungarianAssigner2D',
             cls_cost=dict(type='FocalLossCost', weight=2.),
@@ -108,7 +109,7 @@ model = dict(
                             num_heads=8,
                             dropout=0.1),
                         dict(
-                            type='PETRMultiheadFlashAttention',
+                            type='PETRMultiheadAttention',
                             embed_dims=256,
                             num_heads=8,
                             dropout=0.1),
@@ -136,6 +137,7 @@ model = dict(
         loss_iou=dict(type='GIoULoss', loss_weight=0.0),),
     # model training and testing settings
     train_cfg=dict(pts=dict(
+        device='musa:0',
         grid_size=[512, 512, 1],
         voxel_size=voxel_size,
         point_cloud_range=point_cloud_range,

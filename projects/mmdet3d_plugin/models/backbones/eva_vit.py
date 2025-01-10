@@ -654,7 +654,7 @@ class Attention(nn.Module):
         self.inner_attn_ln = norm_layer(all_head_dim) if subln else nn.Identity()
 
         if self.flash_attn:
-            factory_kwargs = {'device': 'cuda', 'dtype': torch.float16}
+            factory_kwargs = {'device': 'musa', 'dtype': torch.float16}
             self.inner_attn = FlashAttention(attention_dropout=0.0, **factory_kwargs)
 
     def forward(self, x):
