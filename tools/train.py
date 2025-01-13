@@ -12,6 +12,7 @@ import mmcv
 import os
 import time
 import torch
+# import torch_musa
 import warnings
 from mmcv import Config, DictAction
 from mmcv.runner import get_dist_info, init_dist, wrap_fp16_model
@@ -162,6 +163,7 @@ def main():
         distributed = False
     else:
         distributed = True
+        print(cfg.dist_params)
         init_dist(args.launcher, **cfg.dist_params)
         # re-set gpu_ids with distributed training mode
         _, world_size = get_dist_info()

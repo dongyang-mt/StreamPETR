@@ -3,7 +3,7 @@
 You can train the model following:
 
 ```bash
-tools/dist_train.sh projects/configs/StreamPETR/stream_petr_r50_flash_704_bs2_seq_24e.py 8 --work-dir work_dirs/stream_petr_r50_flash_704_bs2_seq_24e/
+tools/dist_train.sh projects/configs/StreamPETR/stream_petr_r50_flash_704_bs2_seq_24e.py 1 --work-dir work_dirs/stream_petr_r50_flash_704_bs2_seq_24e/
 ```
 
 **Notes**: 
